@@ -1,9 +1,6 @@
 // dependencies
 const inquirer = require("inquirer");
-const mysql = require("mysql12");
-
-// dotenv config for .env file
-require("dotenv").config();
+const mysql = require("mysql2");
 
 // create connection to mysql database
 const db = mysql.createConnection({
@@ -11,18 +8,20 @@ const db = mysql.createConnection({
     user: "root",
     password: "Yesidid24@",
     database: "employee_db",
-});
+},
+console.log ("Welcome to the Employee Tracker!")
+);
 
 // connect to mysql database
 db.connect((err) => {
     if (err) throw err;
     console.log("connected as id " + db.threadId);
     // start the app
-    startApp();
+    startMenu();
 });
 
-// startApp function
-const start = () => {
+// startMenu function
+const startMenu = () => {
     // prompt user for what they would like to do
     inquirer
         .prompt({
@@ -42,8 +41,8 @@ const start = () => {
   )
  
   .then((response) => {
-    console.log(response.choices);
-    switch (response.choices) {
+    console.log(response.selections);
+    switch (response.selections) {
       case "View all departments.":
         db.query("SELECT * FROM departments", function (err, results) {
           //View all: Departments, roles, employees, add a department, add a role, add an employee and update their role.
@@ -125,58 +124,59 @@ const start = () => {
 
         break;
       case "Add an employee":
-        db.query("SELECT * FROM employees, roles", (err, result) => {
-
-          inquirer
-            .prompt([
-              //When adding an employee: First, Last, Role, Manager.
-              {
-                type: "input",
-                name: "newfirst_name",
-                message: "Please enter the first name of the employee.",
-              },
-              {
-                type: "input",
-                name: "newlast_name",
-                message: "Please enter the last name of the employee.",
-              },
-              {
-                type: "list",
-                name: "newrole2",
-                message: "Please select their role. (Scroll to select)",
-                choices: result.map(
-                  (result) => result.title + " " + result.role_id
-                ),
-              },
-              {
-                type: "list",
-                name: "newmanager",
-                message:
-                  "Please select their manager.",
-                choices: result.map(
-                  (employee) => employee.first_name + " " + employee.last_name
-                ),
-              },
-            ])
-            .then((results) => {
-              db.query(
-                "INSERT INTO employees (first_name, last_name, role_id, manager) VALUES (?, ?, ?, ?)",
-                [
-                  results.newfirst_name,
-                  results.newlast_name,
-                  results.newrole2,
-                  results.newmanager,
-                ],
-                function (err) {
-                  if (err) throw err;
-                  console.log("Employee successfully added.");
-                  startMenu();
-                }
-              );
-            });
+  db.query("SELECT * FROM roles", (err, roles) => {
+    db.query("SELECT * FROM employees", (err, employees) => {
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "newfirst_name",
+            message: "Please enter the first name of the employee.",
+          },
+          {
+            type: "input",
+            name: "newlast_name",
+            message: "Please enter the last name of the employee.",
+          },
+          {
+            type: "list",
+            name: "newrole_id",
+            message: "Please select their role.",
+            choices: roles.map((role) => ({
+              name: role.title,
+              value: role.id
+            })),
+          },
+          {
+            type: "list",
+            name: "newmanager_id",
+            message: "Please select their manager.",
+            choices: employees.map((employee) => ({
+              name: employee.first_name + " " + employee.last_name,
+              value: employee.id
+            })),
+          },
+        ])
+        .then((results) => {
+          db.query(
+            "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES (?, ?, ?, ?)",
+            [
+              results.newfirst_name,
+              results.newlast_name,
+              results.newrole_id,
+              results.newmanager_id,
+            ],
+            function (err) {
+              if (err) throw err;
+              console.log("Employee successfully added.");
+              startMenu();
+            }
+          );
         });
+    });
+  });
+  break;
 
-        break;
       case "Update an employee role.":
         db.query("SELECT * FROM employees", (err, result) => {
           inquirer
