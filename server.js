@@ -1,17 +1,15 @@
 // dependencies
 const inquirer = require("inquirer");
-const mysql = require("mysql");
+const mysql = require("mysql12");
 
 // dotenv config for .env file
 require("dotenv").config();
-
-const PORT = process.env.PORT || 3001;
 
 // create connection to mysql database
 const db = mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: process.env.DB_PASSWORD,
+    password: "Yesidid24@",
     database: "employee_db",
 });
 
